@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en-US">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Type" content="text/html">
+  <title>Demo</title>
+  <link rel="stylesheet" type="text/css" media="all" href="css/styles.css">
+  <script type="text/javascript" src="js/jquery-1.10.2.min.js"></script>
+</head>
+
+<body>
+  <div id="main">
+    <h1>Get GitHub User Data</h1>
+    <p>Enter a Github username and click the button</p>
+    <input type="text" name="gitHubUserName" id="gitHubUserName" placeholder="Enter Github Username...">
+    <a href="#" id="submitbtn">Get Github User Data</a>
+    <div id="githubdata"></div>
+  </div>
+  <script type="text/javascript">
+		$(function(){
+		  $('#submitbtn').on('click', function(e){
+			e.preventDefault();
+			var username = $('#gitHubUserName').val();
+			var requestUrl   = 'https://api.github.com/users/'+username;
+			var repouri  = 'https://api.github.com/users/'+username+'/repos';
+
+			requestJSON(requestUrl, function(json) {
+			  if(json.message == "Not Found" || username == '') {
+				$('#githubdata').html("<h2>No User Info Found. Enter a valid user name.</h2>");
+			  }
+
+			  else {
+				// else display user info
+				var fullname   = json.name;
+				var outhtml = '';
+				if(fullname == undefined)
+				  fullname = json.login;
+				outhtml = '<h2>'+fullname+' <span class="usergeneral">(@<a href="'+json.html_url+'" target="_blank">'+json.login+'</a>)</span></h2>';
+				outhtml = outhtml + '<div class="ghcontent"><p>Followers: '+json.followers+' - Following: '+json.following+'<br>Repos: '+json.public_repos+'</p></div><div>';
+
+				var repositories;
+				$.getJSON(repouri, function(json){
+				  repositories = json;
+				  printContent();
+				});
+
+				function printContent() {
+				  if(repositories.length == 0) { outhtml = outhtml + '<p>No repos!</p></div>'; }
+				  else {
+					outhtml = outhtml + '<p><strong>Repos List:</strong></p> <ul>';
+					$.each(repositories, function(index) {
+					  outhtml = outhtml + '<li><a href="'+repositories[index].html_url+'" target="_blank">'+repositories[index].name + '</a></li>';
+					});
+					outhtml = outhtml + '</ul></div>';
+				  }
+				  $('#githubdata').html(outhtml);
+				}
+			  }
+			});
+		  });
+
+		  function requestJSON(url, callback) {
+			$.ajax({
+			  url: url,
+			  complete: function(xhr) {
+				callback.call(null, xhr.responseJSON);
+			  }
+			});
+		  }
+		});
+</script>
+</body>
+</html>
